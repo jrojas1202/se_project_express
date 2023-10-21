@@ -7,7 +7,7 @@ const { authorize } = require("../middleware/auth");
 
 router.use("/items", clothingItems);
 
-router.use("/users", authorize, users);
+router.use("/users", users);
 
 router.post("/signup", createUser);
 
