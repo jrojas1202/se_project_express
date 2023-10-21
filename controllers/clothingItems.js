@@ -72,7 +72,7 @@ const likeItems = (req, res) => {
 const dislikeItems = (req, res) => {
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
-    { $pull: { likes: req.user._id } }, // remove _id from the array
+    { $pull: { likes: req.user._id } },
     { new: true },
   )
     .orFail()
