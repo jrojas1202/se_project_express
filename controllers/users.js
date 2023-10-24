@@ -1,46 +1,27 @@
-const bcrypt = require("bcrypt");
+// const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const { BAD_REQUEST, NOT_FOUND, DEFAULT_ERROR } = require("../utils/errors");
 
 const createUser = (req, res) => {
-  const { name, avatar, email, password } = req.body;
+  const { name, avatar } = req.body;
 
-  if (!email) {
-    res.status(BAD_REQUEST).send({ message: "Please include an email" });
-  }
-
-  User.findOne({ email }).then((user) => {
-    if (user) {
-      res
-        .status(403)
-        .send({ message: "A user with that email already exists" });
-    } else {
-      bcrypt
-        .hash(password, 10)
-        .then((hash) => {
-          User.create({ name, avatar, email, password: hash }).then(
-            (newUser) => {
-              res.status(201).send({
-                name: newUser.name,
-                avatar: newUser.avatar,
-                email: newUser.email,
-              });
-            },
-          );
-        })
-        .catch((e) => {
-          if (e.name === "ValidationError") {
-            res.status(BAD_REQUEST).send({
-              message: `Error ${e.name} with the message: ${e.message}`,
-            });
-          } else {
-            res
-              .status(DEFAULT_ERROR)
-              .send({ message: "Error with createUser" });
-          }
-        });
-    }
-  });
+  User.create({ name, avatar })
+    .then((user) => {
+      console.log(user);
+      res.status(201).send({ data: user });
+    })
+    .catch((err) => {
+      console.error(err);
+      // errorHandler(err);
+      if (err.name === "ValidationError") {
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid request (createUser)" });
+      }
+      return res
+        .status(DEFAULT_ERROR)
+        .send({ message: "Server error (createUser)" });
+    });
 };
 
 const getUsers = (req, res) => {
@@ -53,28 +34,32 @@ const getUsers = (req, res) => {
     });
 };
 
-const getUser = (req, res) => {
-  const userId = req.params.userId;
+const getAUser = (req, res) => {
+  const { userId } = req.params;
 
   User.findById(userId)
-    .then((user) => {
-      if (!user) {
-        res.status(NOT_FOUND).send({ message: "User not found" });
-      } else {
-        res.status(200).send({ data: user });
+    .orFail()
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      console.error(err);
+      if (err.name === "ValidationError" || err.name === "CastError") {
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: "Invalid request (getAUser)" });
       }
-    })
-    .catch((e) => {
-      if (e.name === "CastError") {
-        res.status(BAD_REQUEST).send({ message: "Invalid User ID" });
-      } else {
-        res.status(DEFAULT_ERROR).send({ message: "Error with getUser" });
+      if (err.name === "DocumentNotFoundError") {
+        return res
+          .status(NOT_FOUND)
+          .send({ message: "Requested info is not found (getAUser)" });
       }
+      return res
+        .status(DEFAULT_ERROR)
+        .send({ message: "Server error (getAUser)" });
     });
 };
 
 module.exports = {
   createUser,
   getUsers,
-  getUser,
+  getAUser,
 };
