@@ -19,23 +19,23 @@ const userSchema = new mongoose.Schema({
       message: "You must enter a valid URL",
     },
   },
-  // email: {
-  //   type: String,
-  //   required: true,
-  //   unique: true,
-  //   validate: {
-  //     validator(value) {
-  //       return validator.isEmail(value);
-  //     },
-  //     message: "You must enter a valid email",
-  //   },
-  // },
-  // password: {
-  //   type: String,
-  //   required: true,
-  //   minlength: 8, // Minimum length of 8 characters
-  //   select: false, // Excludes the password field from default queries
-  // },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator(value) {
+        return validator.isEmail(value);
+      },
+      message: "You must enter a valid email",
+    },
+  },
+  password: {
+    type: String,
+    required: true,
+    minlength: 8, // Minimum length of 8 characters
+    select: false, // Excludes the password field from default queries
+  },
 });
 
 userSchema.statics.findUserByCredentials = function findUserByCredentials(

@@ -1,10 +1,16 @@
 const ClothingItem = require("../models/clothingItem");
-const { BAD_REQUEST, NOT_FOUND, DEFAULT_ERROR } = require("../utils/errors");
+const {
+  BAD_REQUEST,
+  NOT_FOUND,
+  DEFAULT_ERROR,
+  FORBIDDEN,
+} = require("../utils/errors");
 
 const createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
+  const owner = req.user._id;
 
-  ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
+  ClothingItem.create({ name, weather, imageUrl, owner })
     .then((item) => {
       res.status(201).send({ data: item });
     })
@@ -32,10 +38,16 @@ const getItems = (req, res) => {
 const deleteItems = (req, res) => {
   const { itemId } = req.params;
 
-  ClothingItem.findByIdAndDelete(itemId)
+  ClothingItem.findById(itemId)
     .orFail()
-    .then(() => {
-      res.status(200).send({ message: "Item deleted successfully" }); // Provide a meaningful success message
+    .then((item) => {
+      if (!item.owner.equals(req.user._id)) {
+        return res
+          .status(FORBIDDEN)
+          .send({ message: "You are not authorized to delete this item" });
+      }
+
+      return item.deleteOne().then(() => res.send({ message: "Item deleted" }));
     })
     .catch((e) => {
       if (e.name === "DocumentNotFoundError") {
@@ -51,7 +63,7 @@ const deleteItems = (req, res) => {
 const likeItems = (req, res) => {
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
-    { $addToSet: { likes: req.user._id } }, // add _id to the array if it's not there yet
+    { $addToSet: { likes: req.user._id } },
     { new: true },
   )
     .orFail()

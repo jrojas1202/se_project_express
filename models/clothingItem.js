@@ -34,6 +34,7 @@ const clothingItem = new mongoose.Schema({
   },
   createdAt: {
     type: Date, // Corrected the type to Date
+    format: Date,
     default: Date.now,
   },
 });
