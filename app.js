@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
 const cors = require("cors");
+const errorHandler = require("./middleware/errorHandler");
+const { requestLogger, errorLogger } = require("./middleware/logger");
 
 const { PORT = 3001 } = process.env;
 const app = express();
@@ -24,7 +26,21 @@ app.use(helmet());
 
 app.use(cors());
 
+app.use(requestLogger);
+
+app.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("Server will crash now and go bye bye.");
+  }, 0);
+});
+
 app.use(routes);
+
+app.use(errorLogger);
+
+app.use(errors());
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`App is listening at ${PORT}`);
