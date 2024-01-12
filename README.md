@@ -29,3 +29,9 @@ The ultimate goal is to create a server with an API and user authorization.
 
 **Next Steps**
 In order to make this project even better, I will provide the server access to authentification data and dynamically assign user IDs to clothing items that are produced, allowing each user to have a unique set of clothes.
+
+## DOMAIN NAMES
+
+front end : www.wtwr.ladatap.com
+
+back end : api.wtwr.ladatap.com
