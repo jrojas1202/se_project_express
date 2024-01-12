@@ -20,7 +20,6 @@ mongoose
   .catch((e) => console.error("DB ERROR", e));
 
 const routes = require("./routes");
-const { celebrate } = require("celebrate");
 
 app.use(express.json());
 

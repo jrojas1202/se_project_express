@@ -1,28 +1,23 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const {
-  BAD_REQUEST,
-  NOT_FOUND,
-  DEFAULT_ERROR,
-  UNAUTHORIZED,
-  CONFLICT,
-} = require("../utils/errors");
+const BadRequestError = require("../errors/bad-request-err");
+const NotFoundError = require("../errors/not-found-err");
+const ConflictError = require("../errors/conflict-err");
+const UnauthorizedError = require("../errors/unauthorized-err");
 const { JWT_SECRET } = require("../utils/config");
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
   if (!email) {
-    return res.status(BAD_REQUEST).send({ message: "Please include an email" });
+    next(new BadRequestError("Please include a valid email adress"));
   }
 
   return User.findOne({ email })
     .then((user) => {
       if (user) {
-        return res
-          .status(CONFLICT)
-          .send({ message: "A user with that email already exists" });
+        return next(new ConflictError("A user with that email already exists"));
       }
       return bcrypt
         .hash(password, 10)
@@ -38,23 +33,23 @@ const createUser = (req, res) => {
         .catch((e) => {
           console.error(e);
           if (e.name === "ValidationError") {
-            res.status(BAD_REQUEST).send({
-              message: `Error ${e.name} with the message ${e.message} has occurred while executing the code`,
-            });
+            next(
+              new BadRequestError(
+                `Error ${e.name} with the message ${e.message} has occurred while executing the code`,
+              ),
+            );
           } else {
-            res
-              .status(DEFAULT_ERROR)
-              .send({ message: "Error with createUser" });
+            next(e);
           }
         });
     })
     .catch((e) => {
       console.error(e);
-      res.status(DEFAULT_ERROR).send({ message: "Internal server error" });
+      next(e);
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -65,13 +60,11 @@ const login = (req, res) => {
       res.send({ token });
     })
     .catch(() => {
-      res
-        .status(UNAUTHORIZED)
-        .send({ message: "email or password are incorrect" });
+      next(new UnauthorizedError("Email or Password are incorrect"));
     });
 };
 
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail()
     .then((user) => {
@@ -79,16 +72,16 @@ const getCurrentUser = (req, res) => {
     })
     .catch((e) => {
       if (e.name === "DocumentNotFoundError") {
-        res.status(NOT_FOUND).send({ message: "User not found" });
+        next(new NotFoundError("This user could not be found"));
       } else if (e.name === "CastError") {
-        res.status(BAD_REQUEST).send({ message: "Invalid User ID" });
+        next(new BadRequestError("User has an invalid ID"));
       } else {
-        res.status(DEFAULT_ERROR).send({ message: "Error with getUser" });
+        next(e);
       }
     });
 };
 
-const updateProfile = (req, res) => {
+const updateProfile = (req, res, next) => {
   const { name, avatar } = req.body;
   const userId = req.user._id;
 
@@ -103,13 +96,15 @@ const updateProfile = (req, res) => {
     })
     .catch((e) => {
       if (e.name === "DocumentNotFoundError") {
-        res.status(NOT_FOUND).send({ message: "User not found" });
+        next(new NotFoundError("This user could not be found"));
       } else if (e.name === "ValidationError") {
-        res.status(BAD_REQUEST).send({
-          message: `Error ${e.name} with the message ${e.message} has occurred while executing the code`,
-        });
+        next(
+          new BadRequestError(
+            `Error ${e.name} with the message ${e.message} has occurred while executing the code`,
+          ),
+        );
       } else {
-        res.status(DEFAULT_ERROR).send({ message: "Error with getUser" });
+        next(e);
       }
     });
 };

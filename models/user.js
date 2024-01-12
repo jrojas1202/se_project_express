@@ -33,7 +33,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 8, // Minimum length of 8 characters
     select: false, // Excludes the password field from default queries
   },
 });
