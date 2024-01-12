@@ -32,6 +32,4 @@ In order to make this project even better, I will provide the server access to a
 
 ## DOMAIN NAMES
 
-front end : www.wtwr.ladatap.com
-
-back end : api.wtwr.ladatap.com
+Visit the Site : www.wtwr.ladatap.com
